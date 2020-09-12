@@ -15,6 +15,8 @@ if len(sys.argv) == 1:
   exit(-1)
 
 url = sys.argv[1]
+if not url.endswith('/'):
+  url = url + '/'
 
 Path("export/img").mkdir(parents=True, exist_ok=True)
 
@@ -45,7 +47,7 @@ for page in data['query']['allpages']:
 for page in data['query']['allpages']:
     print(page)
     quoted_pagename = quote_title(page['title'])
-    url_page = url + "/index.php?title=" + quoted_pagename + "&action=render"
+    url_page = url + "index.php?title=" + quoted_pagename + "&action=render"
     response = urllib.request.urlopen(url_page)
     content = response.read().decode()
     pos = 0
