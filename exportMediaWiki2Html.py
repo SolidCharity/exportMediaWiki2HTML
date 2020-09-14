@@ -47,9 +47,9 @@ def DownloadImage(filename, urlimg):
     f.close()
     downloadedimages.append(filename)
 
-filenames = {}
-for page in data['query']['allpages']:
-    filenames[quote_title(page['title'])] = re.sub('[^A-Za-z0-9]+', '_', page['title']) + ".html"
+def PageTitleToFilename(title):
+    temp = re.sub('[^A-Za-z0-9]+', '_', title);
+    return temp.replace("(","_").replace(")","_").replace("__", "_")
 
 for page in data['query']['allpages']:
     if (pageOnly > -1) and (page['pageid'] != pageOnly):
@@ -84,15 +84,14 @@ for page in data['query']['allpages']:
           else:
             print("Error: not an image? " + linkedpage)
             exit(-1)
-        elif linkedpage in filenames:
-          content = content[:pos] + filenames[linkedpage] + content[posendquote:]
         else:
-          content = content[:pos] + linkedpage + content[posendquote:]
+          linkedpage = PageTitleToFilename(linkedpage)
+          content = content[:pos] + linkedpage + ".html" + content[posendquote:]
 
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
     #content = re.sub("(<!--).*?(-->)".encode("utf8"), ''.encode("utf8"), content, flags=re.MULTILINE)
 
-    f = open("export/" + filenames[quoted_pagename], "wb")
+    f = open("export/" + PageTitleToFilename(page['title']) + ".html", "wb")
     f.write(("<html>\n<head><title>" + page['title'] + "</title></head>\n<body>\n").encode("utf8"))
     f.write(("<h1>" + page['title'] + "</h1>").encode("utf8"))
     f.write(content.encode('utf8'))
