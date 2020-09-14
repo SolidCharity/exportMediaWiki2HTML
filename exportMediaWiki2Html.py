@@ -71,6 +71,7 @@ for page in data['query']['allpages']:
           if linkedpage.startswith('Image:'):
               linkType = "Image:"
           linkedpage = linkedpage[linkedpage.find(':')+1:]
+          linkedpage = urllib.parse.unquote(linkedpage)
           imgpos = content.find('src=', posendquote)
           if linkedpage in downloadedimages:
             # probably a thumbnail
