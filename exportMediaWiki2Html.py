@@ -85,6 +85,8 @@ for page in data['query']['allpages']:
           else:
             print("Error: not an image? " + linkedpage)
             exit(-1)
+        elif "&amp;action=edit&amp;redlink=1" in linkedpage:
+          content = content[:pos] + "article_not_existing.html\" style='color:red'" + content[posendquote+1:]
         else:
           linkedpage = PageTitleToFilename(linkedpage)
           content = content[:pos] + linkedpage + ".html" + content[posendquote:]
@@ -98,5 +100,11 @@ for page in data['query']['allpages']:
     f.write(content.encode('utf8'))
     f.write("</body></html>".encode("utf8"))
     f.close()
-    
+
+f = open("export/article_not_existing.html", "wb")
+f.write(("<html>\n<head><title>This article does not exist yet</title></head>\n<body>\n").encode("utf8"))
+f.write(("<h1>This article does not exist yet</h1>").encode("utf8"))
+f.write("</body></html>".encode("utf8"))
+f.close()
+
 
