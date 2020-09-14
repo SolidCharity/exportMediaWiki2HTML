@@ -11,12 +11,19 @@ from pathlib import Path
 import sys
 
 if len(sys.argv) == 1:
-  print("Please pass the url of the wiki, eg. https://mywiki.example.org/")
+  print("Please pass the url of the wiki")
+  print("    ./exportMediaWiki2Html.py https://mywiki.example.org")
+  print("Optionally pass the page id of the page you want to download, eg. for debugging:")
+  print("    ./exportMediaWiki2Html.py https://mywiki.example.org 180")
   exit(-1)
 
 url = sys.argv[1]
 if not url.endswith('/'):
   url = url + '/'
+
+pageOnly = -1
+if len(sys.argv) == 3:
+  pageOnly = int(sys.argv[2])
 
 Path("export/img").mkdir(parents=True, exist_ok=True)
 
@@ -45,6 +52,8 @@ for page in data['query']['allpages']:
     filenames[quote_title(page['title'])] = re.sub('[^A-Za-z0-9]+', '_', page['title']) + ".html"
 
 for page in data['query']['allpages']:
+    if (pageOnly > -1) and (page['pageid'] != pageOnly):
+        continue
     print(page)
     quoted_pagename = quote_title(page['title'])
     url_page = url + "index.php?title=" + quoted_pagename + "&action=render"
