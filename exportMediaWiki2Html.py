@@ -56,16 +56,20 @@ for page in data['query']['allpages']:
         posendquote = content.find('"', pos)
         linkedpage = content[pos:posendquote]
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
-        if linkedpage.startswith('File:'):
+        if linkedpage.startswith('File:') or linkedpage.startswith('Image:'):
+          if linkedpage.startswith('File:'):
+              linkType = "File:"
+          if linkedpage.startswith('Image:'):
+              linkType = "Image:"
           linkedpage = linkedpage[linkedpage.find(':')+1:]
           imgpos = content.find('src=', posendquote)
           if linkedpage in downloadedimages:
             # probably a thumbnail
             content = content[:pos] + "img/" + linkedpage + content[posendquote:]
           elif imgpos > posendquote:
-            imgendquote = content.find('"', imgpos+5)
-            imgpath = content[imgpos+5:imgendquote]
-            content = content[:imgpos+5] + "img/" + linkedpage + content[imgendquote:]
+            imgendquote = content.find('"', imgpos+len(linkType))
+            imgpath = content[imgpos+len(linkType):imgendquote]
+            content = content[:imgpos+len(linkType)] + "img/" + linkedpage + content[imgendquote:]
             DownloadImage(linkedpage, imgpath)
             content = content[:pos] + "img/" + linkedpage + content[posendquote:]
           else:
