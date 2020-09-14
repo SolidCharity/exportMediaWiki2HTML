@@ -87,6 +87,10 @@ for page in data['query']['allpages']:
             exit(-1)
         elif "&amp;action=edit&amp;redlink=1" in linkedpage:
           content = content[:pos] + "article_not_existing.html\" style='color:red'" + content[posendquote+1:]
+        elif "#" in linkedpage:
+          linkWithoutAnchor = linkedpage[0:linkedpage.find('#')]
+          linkWithoutAnchor = PageTitleToFilename(linkWithoutAnchor)
+          content = content[:pos] + linkWithoutAnchor + ".html#" + linkedpage[linkedpage.find('#')+1:] + content[posendquote:]
         else:
           linkedpage = PageTitleToFilename(linkedpage)
           content = content[:pos] + linkedpage + ".html" + content[posendquote:]
