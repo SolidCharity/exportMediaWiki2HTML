@@ -70,18 +70,17 @@ for page in data['query']['allpages']:
               linkType = "File:"
           if linkedpage.startswith('Image:'):
               linkType = "Image:"
-          linkedpage = linkedpage[linkedpage.find(':')+1:]
-          linkedpage = urllib.parse.unquote(linkedpage)
-          imgpos = content.find('src=', posendquote)
-          if linkedpage in downloadedimages:
-            # probably a thumbnail
-            content = content[:pos] + "img/" + linkedpage + content[posendquote:]
-          elif imgpos > posendquote:
+          origlinkedpage = linkedpage[linkedpage.find(':')+1:]
+          linkedpage = urllib.parse.unquote(origlinkedpage)
+          imgpos = content.find('src="/images/', posendquote)
+          if imgpos > posendquote:
             imgendquote = content.find('"', imgpos+len(linkType))
             imgpath = content[imgpos+len(linkType):imgendquote]
-            content = content[:imgpos+len(linkType)] + "img/" + linkedpage + content[imgendquote:]
+          if not linkedpage in downloadedimages:
             DownloadImage(linkedpage, imgpath)
-            content = content[:pos] + "img/" + linkedpage + content[posendquote:]
+          if linkedpage in downloadedimages:
+            content = content.replace(url+"index.php?title="+linkType+origlinkedpage, "img/"+linkedpage)
+            content = content.replace(imgpath, "img/"+linkedpage)
           else:
             print("Error: not an image? " + linkedpage)
             exit(-1)
