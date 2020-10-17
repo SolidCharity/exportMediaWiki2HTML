@@ -5,7 +5,8 @@
 # licensed under the MIT license
 # Copyright 2020 Timotheus Pokorra
 
-import urllib.request, urllib.parse
+from urllib import parse
+import requests
 import json
 import re
 from pathlib import Path
@@ -16,6 +17,8 @@ if len(sys.argv) == 1:
   print("    ./exportMediaWiki2Html.py https://mywiki.example.org")
   print("Optionally pass the page id of the page you want to download, eg. for debugging:")
   print("    ./exportMediaWiki2Html.py https://mywiki.example.org 180")
+  print("Optionally pass the username and password:")
+  print("    ./exportMediaWiki2Html.py https://mywiki.example.org myuser mypwd [pageid]")
   exit(-1)
 
 url = sys.argv[1]
@@ -25,15 +28,56 @@ if not url.endswith('/'):
 pageOnly = -1
 if len(sys.argv) == 3:
   pageOnly = int(sys.argv[2])
+if len(sys.argv) == 5:
+  pageOnly = int(sys.argv[4])
 
 Path("export/img").mkdir(parents=True, exist_ok=True)
 
+S = requests.Session()
+
+if len(sys.argv) >= 4:
+  LgUser = sys.argv[2]
+  LgPassword = sys.argv[3]
+
+  # Retrieve login token first
+  PARAMS_0 = {
+      'action':"query",
+      'meta':"tokens",
+      'type':"login",
+      'format':"json"
+  }
+  R = S.get(url=url + "/api.php", params=PARAMS_0)
+  DATA = R.json()
+  LOGIN_TOKEN = DATA['query']['tokens']['logintoken']
+
+  # Main-account login via "action=login" is deprecated and may stop working without warning. To continue login with "action=login", see [[Special:BotPasswords]]
+  PARAMS_1 = {
+      'action':"login",
+      'lgname':LgUser,
+      'lgpassword':LgPassword,
+      'lgtoken':LOGIN_TOKEN,
+      'format':"json"
+  }
+
+  R = S.post(url + "/api.php", data=PARAMS_1)
+  DATA = R.json()
+  if "error" in DATA:
+    print(DATA)
+    exit(-1)
+
 url_allpages = url + "/api.php?action=query&list=allpages&aplimit=500&format=json"
-response = urllib.request.urlopen(url_allpages)
-data = json.loads(response.read())
+response = S.get(url_allpages)
+data = response.json()
+if "error" in data:
+  print(data)
+  if data['error']['code'] == "readapidenied":
+    print()
+    print("get login token here: " + url + "/api.php?action=query&meta=tokens&type=login")
+    print("and then call this script with parameters: myuser topsecret mytoken")
+    exit(-1)
 
 def quote_title(title):
-  return urllib.parse.quote(page['title'].replace(' ', '_'))
+  return parse.quote(page['title'].replace(' ', '_'))
 
 downloadedimages = []
 def DownloadImage(filename, urlimg):
@@ -41,8 +85,8 @@ def DownloadImage(filename, urlimg):
     if '/thumb/' in urlimg:
       urlimg = urlimg.replace('/thumb/', '/')
       urlimg = urlimg[:urlimg.rindex('/')]
-    response = urllib.request.urlopen(url + urlimg)
-    content = response.read()
+    response = S.get(url + urlimg)
+    content = response.content
     f = open("export/img/" + filename, "wb")
     f.write(content)
     f.close()
@@ -58,8 +102,8 @@ for page in data['query']['allpages']:
     print(page)
     quoted_pagename = quote_title(page['title'])
     url_page = url + "index.php?title=" + quoted_pagename + "&action=render"
-    response = urllib.request.urlopen(url_page)
-    content = response.read().decode()
+    response = S.get(url_page)
+    content = response.text
     pos = 0
     while url + "index.php?title=" in content:
         pos = content.find(url + "index.php?title=")
@@ -73,7 +117,7 @@ for page in data['query']['allpages']:
           if linkedpage.startswith('Image:'):
               linkType = "Image:"
           origlinkedpage = linkedpage[linkedpage.find(':')+1:]
-          linkedpage = urllib.parse.unquote(origlinkedpage)
+          linkedpage = parse.unquote(origlinkedpage)
           imgpos = content.find('src="/images/', posendquote)
           if imgpos > posendquote:
             imgendquote = content.find('"', imgpos+len(linkType))
