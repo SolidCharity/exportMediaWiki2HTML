@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 # Author: Timotheus Pokorra <timotheus.pokorra@solidcharity.com>
+# source hosted at https://github.com/SolidCharity/exportMediaWiki2HTML
 # licensed under the MIT license
 # Copyright 2020 Timotheus Pokorra
 
@@ -65,6 +66,7 @@ for page in data['query']['allpages']:
         posendquote = content.find('"', pos)
         linkedpage = content[pos:posendquote]
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
+        linkedpage = linkedpage.replace('%27', '_');
         if linkedpage.startswith('File:') or linkedpage.startswith('Image:'):
           if linkedpage.startswith('File:'):
               linkType = "File:"
