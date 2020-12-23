@@ -19,12 +19,15 @@ Usage
 =====
 
 Please pass the url of the wiki
+
     ./exportMediaWiki2Html.py https://mywiki.example.org
 
 Optionally pass the page id of the page you want to download, eg. for debugging:
+
     ./exportMediaWiki2Html.py https://mywiki.example.org 180
 
 Optionally pass the username and password:
+
     ./exportMediaWiki2Html.py https://mywiki.example.org myuser mypwd [pageid]
 
 Contribute
