@@ -93,7 +93,7 @@ def DownloadImage(filename, urlimg):
     downloadedimages.append(filename)
 
 def PageTitleToFilename(title):
-    temp = re.sub('[^A-Za-z0-9]+', '_', title);
+    temp = re.sub('[^A-Za-z0-9\u0400-\u0500]+', '_', title);
     return temp.replace("(","_").replace(")","_").replace("__", "_")
 
 for page in data['query']['allpages']:
