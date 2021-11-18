@@ -26,10 +26,11 @@ if not url.endswith('/'):
   url = url + '/'
 
 pageOnly = -1
+categoryOnly = -1
 if len(sys.argv) == 3:
-  pageOnly = int(sys.argv[2])
+  categoryOnly = int(sys.argv[2])
 if len(sys.argv) == 5:
-  pageOnly = int(sys.argv[4])
+  categoryOnly = int(sys.argv[4])
 
 Path("export/img").mkdir(parents=True, exist_ok=True)
 
@@ -65,7 +66,7 @@ if len(sys.argv) >= 4:
     print(DATA)
     exit(-1)
 
-url_allpages = url + "/api.php?action=query&list=allpages&aplimit=500&format=json"
+url_allpages = url + "/api.php?action=query&list=categorymembers&format=json&cmpageid=" + str(categoryOnly)
 response = S.get(url_allpages)
 data = response.json()
 if "error" in data:
@@ -96,7 +97,7 @@ def PageTitleToFilename(title):
     temp = re.sub('[^A-Za-z0-9\u0400-\u0500]+', '_', title);
     return temp.replace("(","_").replace(")","_").replace("__", "_")
 
-for page in data['query']['allpages']:
+for page in data['query']['categorymembers']:
     if (pageOnly > -1) and (page['pageid'] != pageOnly):
         continue
     print(page)
