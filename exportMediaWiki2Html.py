@@ -93,7 +93,7 @@ def DownloadImage(filename, urlimg):
     downloadedimages.append(filename)
 
 def PageTitleToFilename(title):
-    temp = re.sub('[^A-Za-z0-9]+', '_', title);
+    temp = re.sub('[^A-Za-z0-9\u0400-\u0500]+', '_', title);
     return temp.replace("(","_").replace(")","_").replace("__", "_")
 
 for page in data['query']['allpages']:
@@ -141,7 +141,7 @@ for page in data['query']['allpages']:
           content = content[:pos] + linkedpage + ".html" + content[posendquote:]
 
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
-    #content = re.sub("(<!--).*?(-->)".encode("utf8"), ''.encode("utf8"), content, flags=re.MULTILINE)
+    content = re.sub("(<!--).*?(-->)", '', content, flags=re.DOTALL)
 
     f = open("export/" + PageTitleToFilename(page['title']) + ".html", "wb")
     f.write(("<html>\n<head><title>" + page['title'] + "</title></head>\n<body>\n").encode("utf8"))
