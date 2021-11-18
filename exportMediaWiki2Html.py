@@ -3,41 +3,56 @@
 # Author: Timotheus Pokorra <timotheus.pokorra@solidcharity.com>
 # source hosted at https://github.com/SolidCharity/exportMediaWiki2HTML
 # licensed under the MIT license
-# Copyright 2020 Timotheus Pokorra
+# Copyright 2020-2021 Timotheus Pokorra
 
 from urllib import parse
 import requests
 import json
 import re
 from pathlib import Path
-import sys
+import argparse
 
-if len(sys.argv) == 1:
-  print("Please pass the url of the wiki")
-  print("    ./exportMediaWiki2Html.py https://mywiki.example.org")
-  print("Optionally pass the page id of the page you want to download, eg. for debugging:")
-  print("    ./exportMediaWiki2Html.py https://mywiki.example.org 180")
-  print("Optionally pass the username and password:")
-  print("    ./exportMediaWiki2Html.py https://mywiki.example.org myuser mypwd [pageid]")
-  exit(-1)
+description = """
+Export MediaWiki pages to HTML
+Call like this:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org
 
-url = sys.argv[1]
+   Optionally pass the page id of the page you want to download, eg. for debugging:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --page=180
+
+   Optionally pass the category id, all pages with that category will be exported:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --category=22
+
+   Optionally pass the username and password:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username=myuser --password=topsecret
+"""
+parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
+
+parser.add_argument('-l','--url', help='The url of the wiki',required=True)
+parser.add_argument('-u','--username', help='Your user name',required=False)
+parser.add_argument('-p','--password', help='Your password',required=False)
+parser.add_argument('-c','--category', help='The category to export',required=False)
+parser.add_argument('-g','--page', help='The page to export',required=False)
+args = parser.parse_args()
+
+url = args.url
 if not url.endswith('/'):
   url = url + '/'
 
 pageOnly = -1
-if len(sys.argv) == 3:
-  pageOnly = int(sys.argv[2])
-if len(sys.argv) == 5:
-  pageOnly = int(sys.argv[4])
+categoryOnly = -1
+if args.category is not None:
+  categoryOnly = int(args.category)
+if args.page is not None:
+  pageOnly = int(args.page)
 
 Path("export/img").mkdir(parents=True, exist_ok=True)
 
 S = requests.Session()
 
-if len(sys.argv) >= 4:
-  LgUser = sys.argv[2]
-  LgPassword = sys.argv[3]
+if args.username is not None and args.password is not None:
+  LgUser = args.username
+  LgPassword = args.password
 
   # Retrieve login token first
   PARAMS_0 = {
@@ -65,7 +80,10 @@ if len(sys.argv) >= 4:
     print(DATA)
     exit(-1)
 
-url_allpages = url + "/api.php?action=query&list=allpages&aplimit=500&format=json"
+if categoryOnly != -1:
+  url_allpages = url + "/api.php?action=query&list=categorymembers&format=json&cmpageid=" + str(categoryOnly)
+else:
+  url_allpages = url + "/api.php?action=query&list=allpages&aplimit=500&format=json"
 response = S.get(url_allpages)
 data = response.json()
 if "error" in data:
@@ -75,6 +93,10 @@ if "error" in data:
     print("get login token here: " + url + "/api.php?action=query&meta=tokens&type=login")
     print("and then call this script with parameters: myuser topsecret mytoken")
     exit(-1)
+if categoryOnly != -1:
+  pages = data['query']['categorymembers']
+else:
+  pages = data['query']['allpages']
 
 def quote_title(title):
   return parse.quote(page['title'].replace(' ', '_'))
@@ -96,7 +118,7 @@ def PageTitleToFilename(title):
     temp = re.sub('[^A-Za-z0-9\u0400-\u0500]+', '_', title);
     return temp.replace("(","_").replace(")","_").replace("__", "_")
 
-for page in data['query']['allpages']:
+for page in pages:
     if (pageOnly > -1) and (page['pageid'] != pageOnly):
         continue
     print(page)
