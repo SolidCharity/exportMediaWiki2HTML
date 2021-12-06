@@ -1,2 +1,8 @@
 .venv
+.env
+venv
+env
+
+
 export
+*.html
