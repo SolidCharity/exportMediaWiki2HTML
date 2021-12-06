@@ -33,7 +33,17 @@ parser.add_argument('-u','--username', help='Your user name',required=False)
 parser.add_argument('-p','--password', help='Your password',required=False)
 parser.add_argument('-c','--category', help='The category to export',required=False)
 parser.add_argument('-g','--page', help='The page to export',required=False)
+parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
 args = parser.parse_args()
+
+if args.numberOfPages != "max":
+  if args.numberOfPages.isdigit():
+    numberOfPages = str(args.numberOfPages)
+  else:
+    print("Provided number of pages is invalid")
+    exit(-1)
+else:
+  numberOfPages = "max"
 
 url = args.url
 if not url.endswith('/'):
@@ -81,9 +91,9 @@ if args.username is not None and args.password is not None:
     exit(-1)
 
 if categoryOnly != -1:
-  url_allpages = url + "/api.php?action=query&list=categorymembers&format=json&cmpageid=" + str(categoryOnly)
+  url_allpages = url + "/api.php?action=query&list=categorymembers&format=json&cmpageid=" + str(categoryOnly) + "&cmlimit=" + numberOfPages
 else:
-  url_allpages = url + "/api.php?action=query&list=allpages&aplimit=500&format=json"
+  url_allpages = url + "/api.php?action=query&list=allpages&format=json&aplimit=" + numberOfPages
 response = S.get(url_allpages)
 data = response.json()
 if "error" in data:
