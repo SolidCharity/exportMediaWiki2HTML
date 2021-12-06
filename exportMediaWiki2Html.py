@@ -37,11 +37,12 @@ parser.add_argument('-n', '--numberOfPages', help='The number of pages to export
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
-  if args.numberOfPages.isdigit():
+  try:
+    int(args.numberOfPages)
     numberOfPages = str(args.numberOfPages)
-  else:
-    print("Provided number of pages is invalid")
-    exit(-1)
+  except ValueError:
+      print("Provided number of pages is invalid")
+      exit(-1)
 else:
   numberOfPages = "max"
 
