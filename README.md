@@ -15,6 +15,8 @@ This Python script supports the following features:
 * supports authentication for dumping a protected wiki
 * export all (currently up to 500) pages, or export a single page
 
+You need to use a bot password, to make the script work, see [[Special:BotPasswords]] / https://www.mediawiki.org/wiki/Manual:Bot_passwords
+
 Install
 =======
 
@@ -27,15 +29,17 @@ Usage
 
 Please pass the url of the wiki
 
-    python3 exportMediaWiki2Html.py https://mywiki.example.org
+    python3 exportMediaWiki2Html.py --url https://mywiki.example.org
 
 Optionally pass the page id of the page you want to download, eg. for debugging:
 
-    python3 exportMediaWiki2Html.py https://mywiki.example.org 180
+    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --page 180
 
 Optionally pass the username and password:
 
-    python3 exportMediaWiki2Html.py https://mywiki.example.org myuser mypwd [pageid]
+    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --user myuser --password mypwd [pageid]
+
+You can use `--help` to see all options.
 
 Contribute
 ==========
