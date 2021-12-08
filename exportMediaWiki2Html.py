@@ -170,7 +170,7 @@ for page in pages:
           linkWithoutAnchor = PageTitleToFilename(linkWithoutAnchor)
           content = content[:pos] + linkWithoutAnchor + ".html#" + linkedpage[linkedpage.find('#')+1:] + content[posendquote:]
         else:
-          linkedpage = PageTitleToFilename(linkedpage)
+          linkedpage = PageTitleToFilename(parse.unquote(linkedpage))
           content = content[:pos] + linkedpage + ".html" + content[posendquote:]
 
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
