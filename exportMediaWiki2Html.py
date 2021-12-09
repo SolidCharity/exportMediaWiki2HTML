@@ -92,11 +92,24 @@ if args.username is not None and args.password is not None:
     exit(-1)
 
 if categoryOnly != -1:
-  url_allpages = url + "/api.php?action=query&list=categorymembers&format=json&cmpageid=" + str(categoryOnly) + "&cmlimit=" + numberOfPages
+  params_all_pages = {
+    'action': 'query',
+    'list': 'categorymembers',
+    'format': 'json',
+    'cmpageid': categoryOnly,
+    'cmlimit': numberOfPages
+  }
 else:
-  url_allpages = url + "/api.php?action=query&list=allpages&format=json&aplimit=" + numberOfPages
-response = S.get(url_allpages)
+  params_all_pages = {
+    'action': 'query',
+    'list': 'allpages',
+    'format': 'json',
+    'aplimit': numberOfPages
+  }
+
+response = S.get(url + "api.php", params=params_all_pages)
 data = response.json()
+
 if "error" in data:
   print(data)
   if data['error']['code'] == "readapidenied":
@@ -108,6 +121,29 @@ if categoryOnly != -1:
   pages = data['query']['categorymembers']
 else:
   pages = data['query']['allpages']
+
+while 'continue' in data and (numberOfPages == 'max' or len(pages) < int(numberOfPages)):
+  if categoryOnly != -1:
+    params_all_pages['cmcontinue'] = data['continue']['cmcontinue']
+  else:
+    params_all_pages['apcontinue'] = data['continue']['apcontinue']
+
+  response = S.get(url + "api.php", params=params_all_pages)
+
+  data = response.json()
+
+  if "error" in data:
+    print(data)
+    if data['error']['code'] == "readapidenied":
+      print()
+      print(f'get login token here: {url}/api.php?action=query&meta=tokens&type=login')
+      print("and then call this script with parameters: myuser topsecret mytoken")
+      exit(-1)
+
+  if categoryOnly != -1:
+    pages.extend(data['query']['categorymembers'])
+  else:
+    pages.extend(data['query']['allpages'])
 
 def quote_title(title):
   return parse.quote(page['title'].replace(' ', '_'))
