@@ -152,12 +152,17 @@ def quote_title(title):
   return parse.quote(page['title'].replace(' ', '_'))
 
 downloadedimages = []
-def DownloadImage(filename, urlimg):
+def DownloadImage(filename, urlimg, ignorethumb=True):
   if not filename in downloadedimages:
-    if '/thumb/' in urlimg:
+    if ignorethumb and '/thumb/' in urlimg:
       urlimg = urlimg.replace('/thumb/', '/')
       urlimg = urlimg[:urlimg.rindex('/')]
-    response = S.get(url + urlimg)
+    if not urlimg.startswith("http"):
+        urlimg = url + urlimg[1:]
+    print(f"Downloading {urlimg}")
+    response = S.get(urlimg)
+    if response.status_code == 404:
+      raise Exception("404: cannot download " + urlimg)
     content = response.content
     f = open("export/img/" + filename, "wb")
     f.write(content)
@@ -195,9 +200,10 @@ for page in pages:
     while url_title in content:
         pos = content.find(url_title)
         posendquote = content.find('"', pos)
-        linkedpage = content[pos:posendquote]
+        file_url = content[pos:posendquote]
+        linkedpage = file_url
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
-        linkedpage = linkedpage.replace('%27', '_');
+        linkedpage = linkedpage.replace('%27', '_')
         if linkedpage.startswith('File:') or linkedpage.startswith('Image:'):
           if linkedpage.startswith('File:'):
               linkType = "File"
@@ -205,24 +211,14 @@ for page in pages:
               linkType = "Image"
           origlinkedpage = linkedpage[linkedpage.find(':')+1:]
           linkedpage = parse.unquote(origlinkedpage)
-          imgpos = content.find('src="/' + subpath + 'images/', posendquote)
-          if imgpos > posendquote:
-              imgendquote = content.find('"', imgpos + len('src="'))
-              imgpath = content[imgpos+len('src="') + len(subpath):imgendquote]
-              if not linkedpage in downloadedimages:
-                DownloadImage(linkedpage, imgpath)
-          else:
-            # this is a file
-            file_url = content[pos:posendquote]
+
+          if linkType == "File":
             DownloadFile(linkedpage, file_url)
-            imgpath = None
-          if linkedpage in downloadedimages:
-            content = content.replace(url_title+linkType+":"+origlinkedpage, "img/"+linkedpage)
-            if imgpath:
-                content = content.replace("/"+subpath+imgpath[1:], "img/"+linkedpage)
-          else:
-            print("Error: cannot download file " + linkedpage)
-            exit(-1)
+
+          # images are only downloaded for "img src="
+          # we just replace the link here
+          content = content.replace(url_title+linkType+":"+origlinkedpage, "img/"+origlinkedpage)
+
         elif "&amp;action=edit&amp;redlink=1" in linkedpage:
           content = content[:pos] + "article_not_existing.html\" style='color:red'" + content[posendquote+1:]
         elif "#" in linkedpage:
@@ -232,6 +228,29 @@ for page in pages:
         else:
           linkedpage = PageTitleToFilename(parse.unquote(linkedpage))
           content = content[:pos] + linkedpage + ".html" + content[posendquote:]
+
+    # replace all <a href="<url>/<subpath>/images"
+    imgpos = 0
+    while imgpos > -1:
+        imgpos = content.find('href="' + url + 'images/', imgpos)
+        if imgpos > -1:
+          imgendquote = content.find('"', imgpos + len('href="'))
+          imgpath = content[imgpos+len('href="'):imgendquote]
+          filename = imgpath[imgpath.rindex("/")+1:]
+          DownloadImage(filename, imgpath, ignorethumb=False)
+          content = content.replace(content[imgpos + len('href="'):imgendquote], "img/"+filename)
+
+
+    # replace all <img src="/<subpath>/images"
+    imgpos = 0
+    while imgpos > -1:
+        imgpos = content.find('src="/' + subpath + 'images/', imgpos)
+        if imgpos > -1:
+          imgendquote = content.find('"', imgpos + len('src="'))
+          imgpath = content[imgpos+len('src="') + len(subpath):imgendquote]
+          filename = imgpath[imgpath.rindex("/")+1:]
+          DownloadImage(filename, imgpath, ignorethumb=False)
+          content = content.replace("/"+subpath+imgpath[1:], "img/"+filename)
 
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
     content = re.sub("(<!--).*?(-->)", '', content, flags=re.DOTALL)
