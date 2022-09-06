@@ -164,6 +164,18 @@ def DownloadImage(filename, urlimg):
     f.close()
     downloadedimages.append(filename)
 
+def DownloadFile(filename, urlfilepage):
+  if not filename in downloadedimages:
+    # get the file page
+    response = S.get(urlfilepage)
+    content = response.text
+    filepos = content.find('href="/' + subpath + 'images/')
+    if filepos == -1:
+      return
+    fileendquote = content.find('"', filepos + len('href="'))
+    urlfile = content[filepos+len('href="') + len(subpath):fileendquote]
+    DownloadImage(filename, urlfile)
+
 def PageTitleToFilename(title):
     temp = re.sub('[^A-Za-z0-9\u0400-\u0500\u4E00-\u9FFF]+', '_', title);
     return temp.replace("(","_").replace(")","_").replace("__", "_")
@@ -199,9 +211,15 @@ for page in pages:
               imgpath = content[imgpos+len('src="') + len(subpath):imgendquote]
               if not linkedpage in downloadedimages:
                 DownloadImage(linkedpage, imgpath)
+          else:
+            # this is a file
+            file_url = content[pos:posendquote]
+            DownloadFile(linkedpage, file_url)
+            imgpath = None
           if linkedpage in downloadedimages:
             content = content.replace(url_title+linkType+":"+origlinkedpage, "img/"+linkedpage)
-            content = content.replace("/"+subpath+imgpath[1:], "img/"+linkedpage)
+            if imgpath:
+                content = content.replace("/"+subpath+imgpath[1:], "img/"+linkedpage)
           else:
             print("Error: cannot download file " + linkedpage)
             exit(-1)
