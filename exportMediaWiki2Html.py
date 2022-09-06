@@ -49,6 +49,9 @@ else:
 url = args.url
 if not url.endswith('/'):
   url = url + '/'
+# get the subpath of the url, eg. https://www.example.org/wiki/ => wiki/, or empty for no subpath
+subpath = url[url.index("://") + 3:]
+subpath = subpath[subpath.index("/")+1:]
 
 pageOnly = -1
 categoryOnly = -1
@@ -173,31 +176,34 @@ for page in pages:
     url_page = url + "index.php?title=" + quoted_pagename + "&action=render"
     response = S.get(url_page)
     content = response.text
+    url_title = url + "index.php?title="
+    if url_title not in content:
+        url_title = url_title.replace("http://", "https://")
     pos = 0
-    while url + "index.php?title=" in content:
-        pos = content.find(url + "index.php?title=")
+    while url_title in content:
+        pos = content.find(url_title)
         posendquote = content.find('"', pos)
         linkedpage = content[pos:posendquote]
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
         linkedpage = linkedpage.replace('%27', '_');
         if linkedpage.startswith('File:') or linkedpage.startswith('Image:'):
           if linkedpage.startswith('File:'):
-              linkType = "File:"
-          if linkedpage.startswith('Image:'):
-              linkType = "Image:"
+              linkType = "File"
+          elif linkedpage.startswith('Image:'):
+              linkType = "Image"
           origlinkedpage = linkedpage[linkedpage.find(':')+1:]
           linkedpage = parse.unquote(origlinkedpage)
-          imgpos = content.find('src="/images/', posendquote)
+          imgpos = content.find('src="/' + subpath + 'images/', posendquote)
           if imgpos > posendquote:
-            imgendquote = content.find('"', imgpos+len(linkType))
-            imgpath = content[imgpos+len(linkType):imgendquote]
-          if not linkedpage in downloadedimages:
-            DownloadImage(linkedpage, imgpath)
+              imgendquote = content.find('"', imgpos + len('src="'))
+              imgpath = content[imgpos+len('src="') + len(subpath):imgendquote]
+              if not linkedpage in downloadedimages:
+                DownloadImage(linkedpage, imgpath)
           if linkedpage in downloadedimages:
-            content = content.replace(url+"index.php?title="+linkType+origlinkedpage, "img/"+linkedpage)
-            content = content.replace(imgpath, "img/"+linkedpage)
+            content = content.replace(url_title+linkType+":"+origlinkedpage, "img/"+linkedpage)
+            content = content.replace("/"+subpath+imgpath[1:], "img/"+linkedpage)
           else:
-            print("Error: not an image? " + linkedpage)
+            print("Error: cannot download file " + linkedpage)
             exit(-1)
         elif "&amp;action=edit&amp;redlink=1" in linkedpage:
           content = content[:pos] + "article_not_existing.html\" style='color:red'" + content[posendquote+1:]
