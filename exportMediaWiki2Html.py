@@ -220,7 +220,7 @@ for page in pages:
           content = content.replace(url_title+linkType+":"+origlinkedpage, "img/"+origlinkedpage)
 
         elif "&amp;action=edit&amp;redlink=1" in linkedpage:
-          content = content[:pos] + "article_not_existing.html\" style='color:red'" + content[posendquote+1:]
+          content = content[:pos] + "page_not_existing.html\" style='color:red'" + content[posendquote+1:]
         elif "#" in linkedpage:
           linkWithoutAnchor = linkedpage[0:linkedpage.find('#')]
           linkWithoutAnchor = PageTitleToFilename(linkWithoutAnchor)
@@ -262,9 +262,9 @@ for page in pages:
     f.write("</body></html>".encode("utf8"))
     f.close()
 
-f = open("export/article_not_existing.html", "wb")
-f.write(("<html>\n<head><title>This article does not exist yet</title></head>\n<body>\n").encode("utf8"))
-f.write(("<h1>This article does not exist yet</h1>").encode("utf8"))
+f = open("export/page_not_existing.html", "wb")
+f.write(("<html>\n<head><title>This page does not exist yet</title></head>\n<body>\n").encode("utf8"))
+f.write(("<h1>This page does not exist yet</h1>").encode("utf8"))
 f.write("</body></html>".encode("utf8"))
 f.close()
 
