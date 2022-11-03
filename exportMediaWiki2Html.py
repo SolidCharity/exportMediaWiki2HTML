@@ -205,14 +205,16 @@ for page in pages:
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
         linkedpage = linkedpage.replace('%27', '_')
         if linkedpage.startswith('File:') or linkedpage.startswith('Datei:') or linkedpage.startswith('Image:'):
-          if linkedpage.startswith('File:') or linkedpage.startswith('Datei:'):
+          if linkedpage.startswith('File:'):
               linkType = "File"
+          elif linkedpage.startswith('Datei:'):
+              linkType = "Datei"
           elif linkedpage.startswith('Image:'):
               linkType = "Image"
           origlinkedpage = linkedpage[linkedpage.find(':')+1:]
           linkedpage = parse.unquote(origlinkedpage)
 
-          if linkType == "File":
+          if linkType == "File" or linkType == "Datei":
             DownloadFile(linkedpage, file_url)
 
           # images are only downloaded for "img src="
