@@ -204,8 +204,8 @@ for page in pages:
         linkedpage = file_url
         linkedpage = linkedpage[linkedpage.find('=') + 1:]
         linkedpage = linkedpage.replace('%27', '_')
-        if linkedpage.startswith('File:') or linkedpage.startswith('Image:'):
-          if linkedpage.startswith('File:'):
+        if linkedpage.startswith('File:') or linkedpage.startswith('Datei:') or linkedpage.startswith('Image:'):
+          if linkedpage.startswith('File:') or linkedpage.startswith('Datei:'):
               linkType = "File"
           elif linkedpage.startswith('Image:'):
               linkType = "Image"
