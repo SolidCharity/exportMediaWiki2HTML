@@ -20,12 +20,19 @@ You need to use a bot password, to make the script work, see [[Special:BotPasswo
 Install
 =======
 
+    git clone https://github.com/SolidCharity/exportMediaWiki2HTML.git
+    cd exportMediaWiki2HTML
     python3 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
 
 Usage
 =====
+
+For all commands, you need to activate the virtual environment first:
+
+    cd exportMediaWiki2HTML
+    source .venv/bin/activate
 
 Please pass the url of the wiki
 
