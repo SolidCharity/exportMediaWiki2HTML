@@ -20,7 +20,7 @@ Call like this:
    Optionally pass the page id of the page you want to download, eg. for debugging:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --page=180
 
-   Optionally pass the category id, all pages with that category will be exported:
+   Optionally pass the page id of the category, all pages with that category will be exported:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --category=22
 
    Optionally pass the username and password:
