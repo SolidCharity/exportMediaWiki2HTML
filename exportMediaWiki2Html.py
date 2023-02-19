@@ -23,6 +23,9 @@ Call like this:
    Optionally pass the page id of the category, all pages with that category will be exported:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --category=22
 
+   Optionally pass the namespace id, only pages in that namespace will be exported:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --namespace=0
+
    Optionally pass the username and password:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username=myuser --password=topsecret
 """
@@ -33,6 +36,7 @@ parser.add_argument('-u','--username', help='Your user name',required=False)
 parser.add_argument('-p','--password', help='Your password',required=False)
 parser.add_argument('-c','--category', help='The category to export',required=False)
 parser.add_argument('-g','--page', help='The page to export',required=False)
+parser.add_argument('-s', '--namespace', help='The namespace to export', required=False)
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
 args = parser.parse_args()
 
@@ -55,8 +59,16 @@ subpath = subpath[subpath.index("/")+1:]
 
 pageOnly = -1
 categoryOnly = -1
+namespace = args.namespace
 if args.category is not None:
   categoryOnly = int(args.category)
+  if namespace is None:
+    namespace = "*" # all namespaces
+else:
+  if namespace is None:
+    namespace = 0
+  # the allpages API only supports integer IDs
+  namespace = str(int(namespace))
 if args.page is not None:
   pageOnly = int(args.page)
 
@@ -100,6 +112,7 @@ if categoryOnly != -1:
     'list': 'categorymembers',
     'format': 'json',
     'cmpageid': categoryOnly,
+    'cmnamespace': namespace,
     'cmlimit': numberOfPages
   }
 else:
@@ -107,6 +120,7 @@ else:
     'action': 'query',
     'list': 'allpages',
     'format': 'json',
+    'apnamespace': namespace,
     'aplimit': numberOfPages
   }
 
