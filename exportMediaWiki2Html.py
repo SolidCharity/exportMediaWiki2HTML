@@ -254,6 +254,19 @@ for page in pages:
           DownloadImage(filename, imgpath, ignorethumb=False)
           content = content.replace("/"+subpath+imgpath[1:], "img/"+filename)
 
+    # replace all srcset="/<subpath>/images..., /<subpath>/images...""
+    imgpos = 0
+    while imgpos > -1:
+        imgpos = content.find('srcset="/' + subpath + 'images/', imgpos)
+        if imgpos > -1:
+          imgendquote = content.find('"', imgpos + len('srcset="'))
+          srcsetval = content[imgpos+len('srcset="'):imgendquote]
+          for srcsetitem in srcsetval.split(','):
+            imgpath = srcsetitem.strip().split()[0][len(subpath):]
+            filename = imgpath[imgpath.rindex("/")+1:]
+            DownloadImage(filename, imgpath, ignorethumb=False)
+            content = content.replace("/"+subpath+imgpath[1:], "img/"+filename)
+
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
     content = re.sub("(<!--).*?(-->)", '', content, flags=re.DOTALL)
 
