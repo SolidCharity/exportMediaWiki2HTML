@@ -28,6 +28,9 @@ Call like this:
 
    Optionally pass the username and password:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username=myuser --password=topsecret
+
+   Optionally pass the directory to dump the export to:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --outputDir=export
 """
 parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
 
@@ -38,6 +41,7 @@ parser.add_argument('-c','--category', help='The category to export',required=Fa
 parser.add_argument('-g','--page', help='The page to export',required=False)
 parser.add_argument('-s', '--namespace', help='The namespace to export', required=False)
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
+parser.add_argument('-o', '--outputDir', help='The destination directory for the export', type=Path, required=False, default="export")
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
@@ -72,7 +76,7 @@ else:
 if args.page is not None:
   pageOnly = int(args.page)
 
-Path("export/img").mkdir(parents=True, exist_ok=True)
+(args.outputDir / "img").mkdir(parents=True, exist_ok=True)
 
 S = requests.Session()
 
@@ -178,7 +182,7 @@ def DownloadImage(filename, urlimg, ignorethumb=True):
     if response.status_code == 404:
       raise Exception("404: cannot download " + urlimg)
     content = response.content
-    f = open("export/img/" + filename, "wb")
+    f = open(args.outputDir / "img" / filename, "wb")
     f.write(content)
     f.close()
     downloadedimages.append(filename)
@@ -271,14 +275,14 @@ for page in pages:
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
     content = re.sub("(<!--).*?(-->)", '', content, flags=re.DOTALL)
 
-    f = open("export/" + PageTitleToFilename(page['title']) + ".html", "wb")
+    f = open(args.outputDir / (PageTitleToFilename(page['title']) + ".html"), "wb")
     f.write(("<html>\n<head><title>" + page['title'] + "</title></head>\n<body>\n").encode("utf8"))
     f.write(("<h1>" + page['title'] + "</h1>").encode("utf8"))
     f.write(content.encode('utf8'))
     f.write("</body></html>".encode("utf8"))
     f.close()
 
-f = open("export/page_not_existing.html", "wb")
+f = open(args.outputDir / "page_not_existing.html", "wb")
 f.write(("<html>\n<head><title>This page does not exist yet</title></head>\n<body>\n").encode("utf8"))
 f.write(("<h1>This page does not exist yet</h1>").encode("utf8"))
 f.write("</body></html>".encode("utf8"))
