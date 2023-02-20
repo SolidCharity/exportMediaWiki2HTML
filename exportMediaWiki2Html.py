@@ -20,11 +20,17 @@ Call like this:
    Optionally pass the page id of the page you want to download, eg. for debugging:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --page=180
 
-   Optionally pass the category id, all pages with that category will be exported:
+   Optionally pass the page id of the category, all pages with that category will be exported:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --category=22
+
+   Optionally pass the namespace id, only pages in that namespace will be exported:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --namespace=0
 
    Optionally pass the username and password:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username=myuser --password=topsecret
+
+   Optionally pass the directory to dump the export to:
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --outputDir=export
 """
 parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
 
@@ -33,7 +39,9 @@ parser.add_argument('-u','--username', help='Your user name',required=False)
 parser.add_argument('-p','--password', help='Your password',required=False)
 parser.add_argument('-c','--category', help='The category to export',required=False)
 parser.add_argument('-g','--page', help='The page to export',required=False)
+parser.add_argument('-s', '--namespace', help='The namespace to export', required=False)
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
+parser.add_argument('-o', '--outputDir', help='The destination directory for the export', type=Path, required=False, default="export")
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
@@ -55,12 +63,20 @@ subpath = subpath[subpath.index("/")+1:]
 
 pageOnly = -1
 categoryOnly = -1
+namespace = args.namespace
 if args.category is not None:
   categoryOnly = int(args.category)
+  if namespace is None:
+    namespace = "*" # all namespaces
+else:
+  if namespace is None:
+    namespace = 0
+  # the allpages API only supports integer IDs
+  namespace = str(int(namespace))
 if args.page is not None:
   pageOnly = int(args.page)
 
-Path("export/img").mkdir(parents=True, exist_ok=True)
+(args.outputDir / "img").mkdir(parents=True, exist_ok=True)
 
 S = requests.Session()
 
@@ -100,6 +116,7 @@ if categoryOnly != -1:
     'list': 'categorymembers',
     'format': 'json',
     'cmpageid': categoryOnly,
+    'cmnamespace': namespace,
     'cmlimit': numberOfPages
   }
 else:
@@ -107,6 +124,7 @@ else:
     'action': 'query',
     'list': 'allpages',
     'format': 'json',
+    'apnamespace': namespace,
     'aplimit': numberOfPages
   }
 
@@ -164,7 +182,7 @@ def DownloadImage(filename, urlimg, ignorethumb=True):
     if response.status_code == 404:
       raise Exception("404: cannot download " + urlimg)
     content = response.content
-    f = open("export/img/" + filename, "wb")
+    f = open(args.outputDir / "img" / filename, "wb")
     f.write(content)
     f.close()
     downloadedimages.append(filename)
@@ -270,14 +288,14 @@ for page in pages:
     #content = content.replace('<div class="mw-parser-output">'.encode("utf8"), ''.encode("utf8"))
     content = re.sub("(<!--).*?(-->)", '', content, flags=re.DOTALL)
 
-    f = open("export/" + PageTitleToFilename(page['title']) + ".html", "wb")
+    f = open(args.outputDir / (PageTitleToFilename(page['title']) + ".html"), "wb")
     f.write(("<html>\n<head><title>" + page['title'] + "</title></head>\n<body>\n").encode("utf8"))
     f.write(("<h1>" + page['title'] + "</h1>").encode("utf8"))
     f.write(content.encode('utf8'))
     f.write("</body></html>".encode("utf8"))
     f.close()
 
-f = open("export/page_not_existing.html", "wb")
+f = open(args.outputDir / "page_not_existing.html", "wb")
 f.write(("<html>\n<head><title>This page does not exist yet</title></head>\n<body>\n").encode("utf8"))
 f.write(("<h1>This page does not exist yet</h1>").encode("utf8"))
 f.write("</body></html>".encode("utf8"))
