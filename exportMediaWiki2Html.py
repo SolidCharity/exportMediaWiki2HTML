@@ -221,6 +221,11 @@ for page in pages:
         url_title_without_protocol = url_title[url_title.index('/'):]
         content = content.replace(f'a href="{url_title_without_protocol}', f'a href="{protocol}:{url_title_without_protocol}')
 
+    # in case we have links like a href="//wiki.example.org/wiki/..."
+    if url_title not in content:
+        url_title_without_indexphp = url_title.replace("index.php?title=", "wiki/")
+        content = content.replace(f'a href="{url_title_without_indexphp}', f'a href="{url_title}')
+
     pos = 0
     while url_title in content:
         pos = content.find(url_title)
