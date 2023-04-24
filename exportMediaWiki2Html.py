@@ -43,6 +43,7 @@ parser.add_argument('-s', '--namespace', help='The namespace to export', require
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
 parser.add_argument('-o', '--outputDir', help='The destination directory for the export', type=Path, required=False, default="export")
 parser.add_argument('--shortUrl', help='Custom short url path for the wiki', required=False, default='wiki/')
+parser.add_argument('--ssl', help='Enable SSL redirection', required=False, default=True, action=argparse.BooleanOptionalAction)
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
@@ -217,7 +218,7 @@ for page in pages:
     response = S.get(url_page)
     content = response.text
     url_title = url + "index.php?title="
-    if url_title not in content:
+    if (url_title not in content) and args.ssl:
         url_title = url_title.replace("http://", "https://")
 
     # in case we have links like a href="//wiki.example.org/index.php..."
