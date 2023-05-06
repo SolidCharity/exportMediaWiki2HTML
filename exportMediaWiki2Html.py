@@ -105,7 +105,12 @@ if args.username is not None and args.password is not None:
   }
 
   R = S.post(url + "/api.php", data=PARAMS_1)
-  DATA = R.json()
+  try:
+    DATA = R.json()
+  except:
+    print("cannot parse json from action:login")
+    print(R.content)
+    exit(-1)
   if "error" in DATA:
     print(DATA)
     exit(-1)
