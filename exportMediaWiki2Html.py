@@ -42,6 +42,8 @@ parser.add_argument('-g','--page', help='The page to export',required=False)
 parser.add_argument('-s', '--namespace', help='The namespace to export', required=False)
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
 parser.add_argument('-o', '--outputDir', help='The destination directory for the export', type=Path, required=False, default="export")
+parser.add_argument('--shortUrl', help='Custom short url path for the wiki', required=False, default='wiki/')
+parser.add_argument('--ssl', help='Enable SSL redirection', required=False, default=True, action=argparse.BooleanOptionalAction)
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
@@ -77,6 +79,10 @@ if args.page is not None:
   pageOnly = int(args.page)
 
 (args.outputDir / "img").mkdir(parents=True, exist_ok=True)
+
+if not args.shortUrl.endswith('/'):
+  args.shortUrl = args.shortUrl + '/'
+shortUrl = args.shortUrl 
 
 S = requests.Session()
 
@@ -217,7 +223,7 @@ for page in pages:
     response = S.get(url_page)
     content = response.text
     url_title = url + "index.php?title="
-    if url_title not in content:
+    if (url_title not in content) and args.ssl:
         url_title = url_title.replace("http://", "https://")
 
     # in case we have links like a href="//wiki.example.org/index.php..."
@@ -228,7 +234,7 @@ for page in pages:
 
     # in case we have links like a href="//wiki.example.org/wiki/..."
     if url_title not in content:
-        url_title_without_indexphp = url_title.replace("index.php?title=", "wiki/")
+        url_title_without_indexphp = url_title.replace("index.php?title=", shortUrl)
         content = content.replace(f'a href="{url_title_without_indexphp}', f'a href="{url_title}')
 
     pos = 0
