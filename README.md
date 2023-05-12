@@ -42,9 +42,10 @@ Optionally pass the page id of the page you want to download, eg. for debugging:
 
     python3 exportMediaWiki2Html.py --url https://mywiki.example.org --page 180
 
-Optionally pass the username and password:
+Optionally pass the name of a Bot and the Bot password (create a Bot at https://wiki.example.org/index.php?title=Spezial:BotPasswords):
 
-    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --user myuser --password mypwd [pageid]
+    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --user "myuser@botname" --password "botpwd" [pageid]
+
 
 You can use `--help` to see all options.
 

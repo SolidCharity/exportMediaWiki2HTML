@@ -27,7 +27,7 @@ Call like this:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --namespace=0
 
    Optionally pass the username and password:
-   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username=myuser --password=topsecret
+   ./exportMediaWiki2Html.py --url=https://mywiki.example.org --username="myusername@botname" --password=botsecret
 
    Optionally pass the directory to dump the export to:
    ./exportMediaWiki2Html.py --url=https://mywiki.example.org --outputDir=export
@@ -35,8 +35,8 @@ Call like this:
 parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
 
 parser.add_argument('-l','--url', help='The url of the wiki',required=True)
-parser.add_argument('-u','--username', help='Your user name',required=False)
-parser.add_argument('-p','--password', help='Your password',required=False)
+parser.add_argument('-u','--username', help='Your username and bot name, eg. "myuser@botname"',required=False)
+parser.add_argument('-p','--password', help='Your bot password',required=False)
 parser.add_argument('-c','--category', help='The category to export',required=False)
 parser.add_argument('-g','--page', help='The page to export',required=False)
 parser.add_argument('-s', '--namespace', help='The namespace to export', required=False)
