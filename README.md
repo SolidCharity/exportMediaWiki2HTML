@@ -20,12 +20,19 @@ You need to use a bot password, to make the script work, see [[Special:BotPasswo
 Install
 =======
 
+    git clone https://github.com/SolidCharity/exportMediaWiki2HTML.git
+    cd exportMediaWiki2HTML
     python3 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
 
 Usage
 =====
+
+For all commands, you need to activate the virtual environment first:
+
+    cd exportMediaWiki2HTML
+    source .venv/bin/activate
 
 Please pass the url of the wiki
 
@@ -35,9 +42,10 @@ Optionally pass the page id of the page you want to download, eg. for debugging:
 
     python3 exportMediaWiki2Html.py --url https://mywiki.example.org --page 180
 
-Optionally pass the username and password:
+Optionally pass the name of a Bot and the Bot password (create a Bot at https://wiki.example.org/index.php?title=Spezial:BotPasswords):
 
-    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --user myuser --password mypwd [pageid]
+    python3 exportMediaWiki2Html.py --url https://mywiki.example.org --user "myuser@botname" --password "botpwd" [pageid]
+
 
 You can use `--help` to see all options.
 
