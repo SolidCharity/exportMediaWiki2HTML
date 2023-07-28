@@ -5,6 +5,7 @@
 # licensed under the MIT license
 # Copyright 2020-2021 Timotheus Pokorra
 
+import os
 from urllib import parse
 import requests
 import json
@@ -43,7 +44,13 @@ parser.add_argument('-s', '--namespace', help='The namespace to export', require
 parser.add_argument('-n', '--numberOfPages', help='The number of pages to export, or max', required=False, default=500)
 parser.add_argument('-o', '--outputDir', help='The destination directory for the export', type=Path, required=False, default="export")
 parser.add_argument('--shortUrl', help='Custom short url path for the wiki', required=False, default='wiki/')
-parser.add_argument('--ssl', help='Enable SSL redirection', required=False, default=True, action=argparse.BooleanOptionalAction)
+parser.add_argument('--listPages', help='List available pages', required=False, default=False, action='store_true')
+parser.add_argument('--dontOverwrite', help='Skip already downloaded files', required=False, default=False, action='store_true')
+try:
+    parser.add_argument('--ssl', help='Enable SSL redirection', required=False, default=True, action=argparse.BooleanOptionalAction)
+except AttributeError:
+    # BooleanOptionalAction was introduced in Python 3.9
+    parser.add_argument('--ssl', help='Enable SSL redirection', required=False, default=True)
 args = parser.parse_args()
 
 if args.numberOfPages != "max":
@@ -154,6 +161,12 @@ if categoryOnly != -1:
 else:
   pages = data['query']['allpages']
 
+# user may want to download a single page, but needs to know the page number
+if args.listPages:
+    for page in pages:
+        print(f'{page["pageid"]}: {page["title"]}')
+    exit(0)
+
 while 'continue' in data and (numberOfPages == 'max' or len(pages) < int(numberOfPages)):
   if categoryOnly != -1:
     params_all_pages['cmcontinue'] = data['continue']['cmcontinue']
@@ -182,6 +195,7 @@ def quote_title(title):
 
 downloadedimages = []
 def DownloadImage(filename, urlimg, ignorethumb=True):
+  fileOut = f'{args.outputDir}/img/{filename}'
   if not filename in downloadedimages:
     if ignorethumb and '/thumb/' in urlimg:
       urlimg = urlimg.replace('/thumb/', '/')
@@ -193,12 +207,17 @@ def DownloadImage(filename, urlimg, ignorethumb=True):
     if response.status_code == 404:
       raise Exception("404: cannot download " + urlimg)
     content = response.content
-    f = open(args.outputDir / "img" / filename, "wb")
+    f = open(fileOut, "wb")
     f.write(content)
     f.close()
     downloadedimages.append(filename)
 
 def DownloadFile(filename, urlfilepage):
+  fileOut = f'{args.outputDir}/img/{filename}'
+  if args.dontOverwrite and os.path.exists(fileOut):
+      print(f'Ignoring {filename} (already downloaded)')
+      downloadedimages.append(filename)
+      return
   if not filename in downloadedimages:
     # get the file page
     response = S.get(urlfilepage)
@@ -323,5 +342,3 @@ f.write(("<html>\n<head><title>This page does not exist yet</title></head>\n<bod
 f.write(("<h1>This page does not exist yet</h1>").encode("utf8"))
 f.write("</body></html>".encode("utf8"))
 f.close()
-
-
